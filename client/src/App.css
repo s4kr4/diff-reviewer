@@ -1,0 +1,741 @@
+:root {
+  --border: #d1d9e0;
+  --bg: #ffffff;
+  --bg-subtle: #f6f8fa;
+  --fg: #1f2328;
+  --fg-muted: #59636e;
+  --accent: #0969da;
+  --green: #1a7f37;
+  --red: #cf222e;
+  --accent-subtle: #ddf4ff;
+  --hover: #e7ebf0;
+  --green-subtle: #dafbe1;
+  --red-subtle: #ffebe9;
+  --attention-subtle: #fff8c5;
+  --attention-fg: #9a6700;
+  --done-subtle: #fbefff;
+  --done-fg: #8250df;
+  --btn-primary-bg: #1a7f37;
+  --btn-primary-hover: #166f30;
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+[data-theme='dark'] {
+  --border: #3d444d;
+  --bg: #0d1117;
+  --bg-subtle: #151b23;
+  --fg: #f0f6fc;
+  --fg-muted: #9198a1;
+  --accent: #4493f8;
+  --green: #3fb950;
+  --red: #f85149;
+  --accent-subtle: rgba(56, 139, 253, 0.15);
+  --hover: #262c36;
+  --green-subtle: rgba(46, 160, 67, 0.15);
+  --red-subtle: rgba(248, 81, 73, 0.15);
+  --attention-subtle: rgba(187, 128, 9, 0.15);
+  --attention-fg: #d29922;
+  --done-subtle: rgba(163, 113, 247, 0.15);
+  --done-fg: #a371f7;
+  --btn-primary-bg: #238636;
+  --btn-primary-hover: #29903b;
+
+  color-scheme: dark;
+}
+
+/* OS がダーク設定で、手動指定が無い（または dark の）場合に追従する */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --border: #3d444d;
+    --bg: #0d1117;
+    --bg-subtle: #151b23;
+    --fg: #f0f6fc;
+    --fg-muted: #9198a1;
+    --accent: #4493f8;
+    --green: #3fb950;
+    --red: #f85149;
+    --accent-subtle: rgba(56, 139, 253, 0.15);
+    --hover: #262c36;
+    --green-subtle: rgba(46, 160, 67, 0.15);
+    --red-subtle: rgba(248, 81, 73, 0.15);
+    --attention-subtle: rgba(187, 128, 9, 0.15);
+    --attention-fg: #d29922;
+    --done-subtle: rgba(163, 113, 247, 0.15);
+    --done-fg: #a371f7;
+    --btn-primary-bg: #238636;
+    --btn-primary-hover: #29903b;
+
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', Meiryo,
+    sans-serif;
+  font-size: 14px;
+  color: var(--fg);
+  background: var(--bg);
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+/* ---------- layout ---------- */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-subtle);
+  flex-shrink: 0;
+}
+
+.app-logo {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.repo-name {
+  color: var(--fg-muted);
+}
+
+.branch-chip {
+  background: var(--accent-subtle);
+  color: var(--accent);
+  border-radius: 12px;
+  padding: 2px 8px;
+  font-size: 12px;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.tabs button {
+  border: none;
+  background: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  color: var(--fg);
+}
+
+.tabs button:hover {
+  background: var(--hover);
+}
+
+.tabs button.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.theme-btn {
+  flex-shrink: 0;
+}
+
+.app-main {
+  flex: 1;
+  overflow: auto;
+}
+
+.app-error {
+  padding: 32px;
+}
+
+/* ---------- common ---------- */
+
+.view {
+  padding: 12px 16px;
+}
+
+.view-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.view-header h2 {
+  font-size: 15px;
+  margin: 0;
+}
+
+.empty-state {
+  padding: 48px;
+  text-align: center;
+  color: var(--fg-muted);
+}
+
+.error {
+  color: var(--red);
+}
+
+.muted {
+  color: var(--fg-muted);
+  font-size: 12px;
+}
+
+.hint {
+  color: var(--fg-muted);
+  font-size: 12px;
+}
+
+.btn {
+  border: 1px solid var(--border);
+  background: var(--bg-subtle);
+  border-radius: 6px;
+  padding: 4px 12px;
+  color: var(--fg);
+}
+
+.btn:hover {
+  background: var(--hover);
+}
+
+.btn-primary {
+  background: var(--btn-primary-bg);
+  border-color: var(--btn-primary-bg);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: var(--btn-primary-hover);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.btn-small {
+  padding: 2px 8px;
+  font-size: 12px;
+  margin-left: auto;
+}
+
+.link-btn {
+  border: none;
+  background: none;
+  color: var(--accent);
+  padding: 0;
+}
+
+.link-btn:hover {
+  text-decoration: underline;
+}
+
+.link-btn.danger {
+  color: var(--red);
+}
+
+.copy-btn {
+  border: none;
+  background: none;
+  padding: 0 4px;
+  color: var(--fg-muted);
+  font-size: 13px;
+  flex-shrink: 0;
+  border-radius: 4px;
+}
+
+.copy-btn:hover {
+  color: var(--accent);
+  background: var(--accent-subtle);
+}
+
+.copy-btn.copied {
+  color: var(--green);
+}
+
+/* ---------- diff page ---------- */
+
+.diff-page {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.diff-file-list {
+  position: sticky;
+  top: 0;
+  width: 280px;
+  flex-shrink: 0;
+  max-height: calc(100vh - 120px);
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+}
+
+.diff-file-list-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-subtle);
+}
+
+.diff-file-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+}
+
+.diff-file-list a {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px 12px;
+  color: var(--fg);
+  text-decoration: none;
+  font-size: 12px;
+  font-family: var(--font-mono);
+}
+
+.diff-file-list a:hover {
+  background: var(--bg-subtle);
+}
+
+.file-list-path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  direction: rtl;
+  text-align: left;
+}
+
+.file-list-stats {
+  flex-shrink: 0;
+  display: flex;
+  gap: 4px;
+}
+
+.diff-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.diff-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.view-toggle {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.view-toggle button {
+  border: none;
+  background: var(--bg);
+  padding: 4px 12px;
+  font-size: 12px;
+  color: var(--fg);
+}
+
+.view-toggle button.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.diff-card {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.diff-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.collapse-btn {
+  border: none;
+  background: none;
+  padding: 0 4px;
+  color: var(--fg-muted);
+}
+
+.diff-card-path {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diff-card-stats {
+  display: flex;
+  gap: 6px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+}
+
+.stat-add {
+  color: var(--green);
+}
+
+.stat-del {
+  color: var(--red);
+}
+
+.badge {
+  font-size: 11px;
+  padding: 1px 7px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.badge-add {
+  background: var(--green-subtle);
+  color: var(--green);
+}
+
+.badge-delete {
+  background: var(--red-subtle);
+  color: var(--red);
+}
+
+.badge-modify {
+  background: var(--attention-subtle);
+  color: var(--attention-fg);
+}
+
+.badge-rename {
+  background: var(--accent-subtle);
+  color: var(--accent);
+}
+
+.badge-comment {
+  background: var(--accent-subtle);
+  color: var(--accent);
+}
+
+.badge-merge {
+  background: var(--done-subtle);
+  color: var(--done-fg);
+  margin-right: 6px;
+}
+
+.diff-empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--fg-muted);
+}
+
+/* ---------- comments ---------- */
+
+.comment-widget {
+  background: var(--bg-subtle);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 8px 12px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', sans-serif;
+}
+
+.comment-entry,
+.comment-form {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: 4px 0;
+  max-width: 720px;
+}
+
+.comment-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--fg-muted);
+  margin-bottom: 4px;
+}
+
+.comment-meta-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.comment-body {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 13px;
+}
+
+.comment-textarea {
+  width: 100%;
+  min-height: 64px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px;
+  font: inherit;
+  font-size: 13px;
+  resize: vertical;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.comment-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+/* ---------- compare ---------- */
+
+.compare-header label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.compare-header select {
+  font: inherit;
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  max-width: 260px;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.compare-arrow {
+  color: var(--fg-muted);
+}
+
+.compare-commits {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-subtle);
+  font-size: 13px;
+}
+
+.compare-commits li {
+  padding: 2px 0;
+}
+
+/* ---------- history ---------- */
+
+.history-view {
+  display: flex;
+  height: 100%;
+}
+
+.commit-list {
+  width: 340px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+
+.commit-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  padding: 8px 12px;
+  color: var(--fg);
+}
+
+.commit-item:hover {
+  background: var(--bg-subtle);
+}
+
+.commit-item.selected {
+  background: var(--accent-subtle);
+}
+
+.commit-subject {
+  font-size: 13px;
+  margin-bottom: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.commit-meta {
+  font-size: 11px;
+  color: var(--fg-muted);
+}
+
+.load-more {
+  margin: 8px;
+}
+
+.commit-detail {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding: 12px 16px;
+}
+
+.commit-detail-header {
+  margin-bottom: 16px;
+}
+
+.commit-detail-header h2 {
+  font-size: 16px;
+  margin: 0 0 8px;
+}
+
+.commit-body {
+  font-size: 13px;
+  white-space: pre-wrap;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+/* ---------- files ---------- */
+
+.files-view {
+  display: flex;
+  height: 100%;
+}
+
+.files-sidebar {
+  width: 300px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  gap: 8px;
+}
+
+.files-sidebar select,
+.files-sidebar input {
+  font: inherit;
+  font-size: 13px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  width: 100%;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.tree {
+  overflow: auto;
+  flex: 1;
+}
+
+.tree-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: none;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-radius: 4px;
+  color: var(--fg);
+}
+
+.tree-item:hover {
+  background: var(--bg-subtle);
+}
+
+.tree-item.selected {
+  background: var(--accent-subtle);
+  color: var(--accent);
+}
+
+.tree-dir {
+  color: var(--fg-muted);
+  font-weight: 600;
+}
+
+.file-content {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+}
+
+.file-content-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  padding: 8px 16px;
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border);
+}
+
+/* ---------- comments view ---------- */
+
+.comments-view .comment-scope {
+  margin-bottom: 24px;
+}
+
+.comments-view h2 {
+  font-size: 15px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
+}
+
+.comment-row {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  max-width: 800px;
+}
+
+.comment-row-loc {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  font-size: 12px;
+  margin-bottom: 4px;
+}

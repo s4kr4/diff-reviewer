@@ -1,0 +1,62 @@
+# diff-reviewer
+
+ローカル開発用の diff / 変更履歴レビューツール。GitHub の Pull Request 風の UI で、任意のローカル git リポジトリを閲覧できる。
+
+## 機能
+
+- **作業ツリー**: HEAD と作業ツリーの差分（staged / unstaged / 未追跡ファイルを含む）
+- **ブランチ比較**: `git diff base...head`（GitHub PR と同じ 3 点ドット比較）とコミット一覧
+- **履歴**: コミット一覧から選択して各コミットの差分を閲覧
+- **ファイル**: 任意の ref（作業ツリー / ブランチ / コミット）のファイルツリーとシンタックスハイライト付きビューア。diff の「ファイルを開く」から該当行へジャンプ可能
+- **行コメント**: diff の行番号クリックでコメントを追加。対象リポジトリの `.git/diff-reviewer-comments.json` にローカル保存（作業ツリーを汚さない）
+- Unified / Split 表示切り替え、シンタックスハイライト付き diff
+
+## セットアップ
+
+```sh
+npm install
+```
+
+## 使い方
+
+### 開発モード（このツール自体を開発するとき）
+
+```sh
+DIFF_REVIEWER_REPO=/path/to/target-repo npm run dev
+```
+
+- Vite dev サーバー: http://localhost:5173 （こちらを開く）
+- API サーバー: http://localhost:5175
+
+### 通常利用
+
+```sh
+npm run build   # 初回とクライアント更新時のみ
+DIFF_REVIEWER_REPO=/path/to/target-repo DIFF_REVIEWER_OPEN=1 npm start
+```
+
+`DIFF_REVIEWER_OPEN=1` を付けると起動時にブラウザが自動で開く。付けない場合は http://localhost:5175 を手動で開く。
+
+環境変数:
+
+| 変数 | 既定値 | 説明 |
+| --- | --- | --- |
+| `DIFF_REVIEWER_REPO` | カレントディレクトリ | 対象リポジトリのパス（`npm start -- /path` でも指定可） |
+| `DIFF_REVIEWER_PORT` | 5175 | API サーバーのポート |
+| `DIFF_REVIEWER_OPEN` | （無効） | `1` で起動時にブラウザで開いてアクティブにする |
+
+## 構成
+
+```
+diff-reviewer/
+├── server/   Express + git CLI ラッパー（API とビルド済みクライアントの配信）
+└── client/   Vite + React + @pierre/diffs（Shiki ベースの diff レンダリング）
+```
+
+サーバーは git コマンドの薄い HTTP ラッパーで、リポジトリの状態は一切変更しない（読み取り専用）。コメントの書き込み先も `.git/` 配下の JSON のみ。
+
+## 既知の制限
+
+- マージコミットの差分は表示されない（`git diff-tree` の既定挙動）
+- シンボル定義へのジャンプ（LSP 相当）は未対応。ファイル名絞り込みと行ジャンプのみ
+- コメントは「ファイル + 行番号 + スコープ」に紐づくため、その後の編集で行がずれると diff 上に表示されなくなる（コメントタブには残る）
