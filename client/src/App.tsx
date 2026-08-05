@@ -31,13 +31,63 @@ function guessBase(repo: RepoInfo): string {
   return repo.branches[0] ?? 'HEAD';
 }
 
+interface UrlState {
+  tab: Tab;
+  compareSel: CompareSelection | null;
+  selectedCommit: string | null;
+  fileTarget: FileTarget | null;
+}
+
+function parseUrlState(): UrlState {
+  const params = new URLSearchParams(location.search);
+  const rawTab = params.get('tab');
+  const tab: Tab = TABS.some((t) => t.id === rawTab) ? (rawTab as Tab) : 'working';
+  const base = params.get('base');
+  const head = params.get('head');
+  const path = params.get('path');
+  const ref = params.get('ref');
+  const line = Number(params.get('line'));
+  return {
+    tab,
+    compareSel: base && head ? { base, head } : null,
+    selectedCommit: params.get('commit'),
+    fileTarget:
+      ref && path ? { ref, path, line: Number.isInteger(line) && line > 0 ? line : undefined } : null,
+  };
+}
+
+// アクティブなタブの状態だけを URL クエリに載せる
+function buildSearch(state: UrlState): string {
+  const params = new URLSearchParams();
+  if (state.tab !== 'working') params.set('tab', state.tab);
+  if (state.tab === 'compare' && state.compareSel) {
+    params.set('base', state.compareSel.base);
+    params.set('head', state.compareSel.head);
+  }
+  if (state.tab === 'history' && state.selectedCommit) {
+    params.set('commit', state.selectedCommit);
+  }
+  if (state.tab === 'files' && state.fileTarget?.path) {
+    params.set('ref', state.fileTarget.ref);
+    params.set('path', state.fileTarget.path);
+    if (state.fileTarget.line) params.set('line', String(state.fileTarget.line));
+  }
+  const s = params.toString();
+  return s ? `?${s}` : '';
+}
+
 export default function App() {
+  const [initialUrlState] = useState(parseUrlState);
   const [repo, setRepo] = useState<RepoInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [tab, setTab] = useState<Tab>('working');
-  const [compareSel, setCompareSel] = useState<CompareSelection | null>(null);
-  const [selectedCommit, setSelectedCommit] = useState<string | null>(null);
-  const [fileTarget, setFileTarget] = useState<FileTarget | null>(null);
+  const [tab, setTab] = useState<Tab>(initialUrlState.tab);
+  const [compareSel, setCompareSel] = useState<CompareSelection | null>(
+    initialUrlState.compareSel,
+  );
+  const [selectedCommit, setSelectedCommit] = useState<string | null>(
+    initialUrlState.selectedCommit,
+  );
+  const [fileTarget, setFileTarget] = useState<FileTarget | null>(initialUrlState.fileTarget);
   const { pref: themePref, resolved: theme, cycle: cycleTheme } = useTheme();
 
   useEffect(() => {
@@ -45,12 +95,40 @@ export default function App() {
       .repo()
       .then((info) => {
         setRepo(info);
-        setCompareSel({
-          base: guessBase(info),
-          head: info.currentBranch !== 'HEAD' ? info.currentBranch : guessBase(info),
-        });
+        // URL から比較対象が復元済みならそちらを優先する
+        setCompareSel(
+          (prev) =>
+            prev ?? {
+              base: guessBase(info),
+              head: info.currentBranch !== 'HEAD' ? info.currentBranch : guessBase(info),
+            },
+        );
       })
       .catch((err) => setError(err.message));
+  }, []);
+
+  // 画面状態 → URL（履歴に積む）。popstate 直後は URL と一致するので何もしない
+  useEffect(() => {
+    const next =
+      location.pathname + buildSearch({ tab, compareSel, selectedCommit, fileTarget });
+    const current = location.pathname + location.search;
+    if (next !== current) {
+      history.pushState(null, '', next + location.hash);
+    }
+  }, [tab, compareSel, selectedCommit, fileTarget]);
+
+  // ブラウザバック / フォワード → URL から画面状態を復元
+  useEffect(() => {
+    const onPopState = () => {
+      const state = parseUrlState();
+      setTab(state.tab);
+      // compareSel は null にするとデフォルト解決前の状態に戻ってしまうため、値がある場合のみ反映
+      if (state.compareSel) setCompareSel(state.compareSel);
+      setSelectedCommit(state.selectedCommit);
+      setFileTarget(state.fileTarget);
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
   }, []);
 
   // diff 内の「ファイルを開く」→ ファイルビューへジャンプ
