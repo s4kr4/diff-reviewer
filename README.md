@@ -13,8 +13,10 @@
 
 ## セットアップ
 
+pnpm を使用する（未導入なら `corepack enable pnpm` で有効化できる）。
+
 ```sh
-npm install
+pnpm install
 ```
 
 ## 使い方
@@ -22,28 +24,30 @@ npm install
 ### 開発モード（このツール自体を開発するとき）
 
 ```sh
-DIFF_REVIEWER_REPO=/path/to/target-repo npm run dev
+pnpm dev /path/to/target-repo
 ```
 
 - Vite dev サーバー: http://localhost:5173 （こちらを開く）
-- API サーバー: http://localhost:5175
+- API サーバー: http://localhost:8080
 
 ### 通常利用
 
 ```sh
-npm run build   # 初回とクライアント更新時のみ
-DIFF_REVIEWER_REPO=/path/to/target-repo DIFF_REVIEWER_OPEN=1 npm start
+pnpm build   # 初回とクライアント更新時のみ
+pnpm start /path/to/target-repo --open
 ```
 
-`DIFF_REVIEWER_OPEN=1` を付けると起動時にブラウザが自動で開く。付けない場合は http://localhost:5175 を手動で開く。
+`--open` を付けると起動時にブラウザが自動で開く。付けない場合は http://localhost:8080 を手動で開く。
 
-環境変数:
+コマンドライン引数（`pnpm dev` / `pnpm start` 共通）:
 
-| 変数 | 既定値 | 説明 |
+| 引数 | 既定値 | 説明 |
 | --- | --- | --- |
-| `DIFF_REVIEWER_REPO` | カレントディレクトリ | 対象リポジトリのパス（`npm start -- /path` でも指定可） |
-| `DIFF_REVIEWER_PORT` | 5175 | API サーバーのポート |
-| `DIFF_REVIEWER_OPEN` | （無効） | `1` で起動時にブラウザで開いてアクティブにする |
+| `[repo-path]` | カレントディレクトリ | 対象リポジトリのパス |
+| `--port <port>`（`-p`） | 8080 | API サーバーのポート |
+| `--open` | （無効） | 起動時にブラウザで開いてアクティブにする |
+
+注意: 開発モードで `--port` を変える場合は、Vite の API プロキシ先（`client/vite.config.ts`）も合わせて変更が必要。
 
 ## 構成
 

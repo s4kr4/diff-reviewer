@@ -3,6 +3,7 @@ import { spawn } from 'node:child_process';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { parseArgs } from 'node:util';
 import {
   commitDetail,
   compare,
@@ -15,8 +16,35 @@ import {
 } from './git.js';
 import { CommentStore } from './comments.js';
 
-const PORT = Number(process.env.DIFF_REVIEWER_PORT || 5175);
-const repo = path.resolve(process.env.DIFF_REVIEWER_REPO || process.argv[2] || process.cwd());
+const usage = 'usage: pnpm start [repo-path] [--port <port>] [--open]';
+
+function parseCli() {
+  try {
+    return parseArgs({
+      options: {
+        port: { type: 'string', short: 'p' },
+        open: { type: 'boolean' },
+      },
+      allowPositionals: true,
+    });
+  } catch (err: any) {
+    console.error(`error: ${err?.message || String(err)}`);
+    console.error(usage);
+    process.exit(1);
+  }
+}
+const cli = parseCli();
+
+const PORT = Number(cli.values.port ?? 8080);
+if (!Number.isInteger(PORT) || PORT <= 0) {
+  console.error(`error: --port の値が不正です: ${cli.values.port}`);
+  console.error(usage);
+  process.exit(1);
+}
+// pnpm 経由では cwd がパッケージディレクトリになるため、コマンド実行元（INIT_CWD）を基準に解決する
+const invokeDir = process.env.INIT_CWD || process.cwd();
+const repo = path.resolve(invokeDir, cli.positionals[0] || '.');
+const openBrowser = cli.values.open === true;
 
 // 起動時にリポジトリとして有効かを検証する
 let gitDir: string;
@@ -24,7 +52,7 @@ try {
   gitDir = (await git(repo, ['rev-parse', '--absolute-git-dir'])).trim();
 } catch {
   console.error(`error: ${repo} は git リポジトリではありません`);
-  console.error('usage: DIFF_REVIEWER_REPO=/path/to/repo npm start  （または npm start -- /path/to/repo）');
+  console.error(usage);
   process.exit(1);
 }
 
@@ -161,9 +189,9 @@ app.listen(PORT, () => {
   if (!fs.existsSync(clientDist)) {
     console.log('diff-reviewer: client/dist が無いため API のみ提供中（開発時は Vite 側 http://localhost:5173 を開く）');
   }
-  // DIFF_REVIEWER_OPEN=1 のときブラウザで開いてアクティブにする
+  // --open のときブラウザで開いてアクティブにする
   // （dev モードは tsx watch が再起動のたびに実行するため既定では開かない）
-  if (process.env.DIFF_REVIEWER_OPEN === '1') {
+  if (openBrowser) {
     const opener = process.platform === 'darwin' ? 'open' : 'xdg-open';
     spawn(opener, [url], { detached: true, stdio: 'ignore' }).on('error', () => {
       console.log(`diff-reviewer: ブラウザを開けませんでした（${opener} が失敗）`);

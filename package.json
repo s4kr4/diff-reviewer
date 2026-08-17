@@ -2,15 +2,12 @@
   "name": "diff-reviewer",
   "private": true,
   "version": "0.1.0",
-  "workspaces": [
-    "server",
-    "client"
-  ],
+  "packageManager": "pnpm@11.22.0",
   "scripts": {
-    "dev": "concurrently -n server,client -c blue,green \"npm run dev -w server\" \"npm run dev -w client\"",
-    "build": "npm run build -w client",
-    "start": "npm run start -w server",
-    "typecheck": "npm run typecheck -w server && npm run typecheck -w client"
+    "dev": "concurrently -P -n server,client -c blue,green \"pnpm --filter server dev {@}\" \"pnpm --filter client dev\" --",
+    "build": "pnpm --filter client build",
+    "start": "pnpm --filter server start",
+    "typecheck": "pnpm --filter server typecheck && pnpm --filter client typecheck"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"
