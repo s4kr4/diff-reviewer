@@ -59,6 +59,10 @@ diff-reviewer/
 
 サーバーは git コマンドの薄い HTTP ラッパーで、リポジトリの状態は一切変更しない（読み取り専用）。コメントの書き込み先も `.git/` 配下の JSON のみ。
 
+## コメントデータ
+
+行コメントは対象リポジトリの `<git dir>/diff-reviewer-comments.json` に保存される（`git rev-parse --absolute-git-dir` で場所を特定できる）。エージェント等が機械的に読む場合はこのファイルを直接読むか、サーバー起動中なら `GET /api/comments` を使う。各コメントは `scope`（`working` / `compare:<base>...<head>` / `commit:<sha>`）・`file`・`side`（`new`=変更後 / `old`=変更前）・`line`・`body` を持つ。
+
 ## 既知の制限
 
 - マージコミットの差分は表示されない（`git diff-tree` の既定挙動）
