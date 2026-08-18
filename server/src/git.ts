@@ -125,7 +125,12 @@ export async function compare(repo: string, base: string, head: string) {
     `--format=${LOG_FORMAT}`,
     `${base}..${head}`,
   ]);
-  return { patch, commits: parseLog(commitsOut) };
+  // 3点ドット比較の old 側スナップショット。unrelated histories では存在しない
+  let mergeBase: string | null = null;
+  try {
+    mergeBase = (await git(repo, ['merge-base', base, head])).trim() || null;
+  } catch {}
+  return { patch, commits: parseLog(commitsOut), mergeBase };
 }
 
 export async function log(repo: string, ref: string, skip: number, limit: number) {

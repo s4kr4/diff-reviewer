@@ -44,6 +44,7 @@ export function WorkingView({ onOpenFile }: Props) {
         scope="working"
         onOpenFile={onOpenFile('WORKING')}
         emptyMessage="作業ツリーに変更はありません"
+        fileRefs={{ old: 'HEAD', new: 'WORKING' }}
       />
     </div>
   );

@@ -8,6 +8,7 @@ import {
   countChanges,
   displayPath,
   type DiffViewType,
+  type FileRefs,
 } from './DiffFileCard';
 
 interface Props {
@@ -15,9 +16,11 @@ interface Props {
   scope: string;
   onOpenFile?: (path: string, line?: number) => void;
   emptyMessage?: string;
+  // 指定すると diff の未変更行（ハンク間の折りたたみ部分）を展開できるようになる
+  fileRefs?: FileRefs;
 }
 
-export function DiffPage({ patch, scope, onOpenFile, emptyMessage }: Props) {
+export function DiffPage({ patch, scope, onOpenFile, emptyMessage, fileRefs }: Props) {
   const [viewType, setViewType] = useState<DiffViewType>('unified');
   const commentActions = useComments(scope);
 
@@ -100,6 +103,7 @@ export function DiffPage({ patch, scope, onOpenFile, emptyMessage }: Props) {
             commentActions={commentActions}
             onOpenFile={onOpenFile}
             anchorId={`file-${i}`}
+            fileRefs={fileRefs}
           />
         ))}
       </div>

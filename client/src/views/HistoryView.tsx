@@ -101,6 +101,8 @@ export function HistoryView({ selectedSha, onSelect, onOpenFile }: Props) {
               scope={`commit:${detail.commit.sha}`}
               onOpenFile={onOpenFile(detail.commit.sha)}
               emptyMessage="このコミットに差分はありません"
+              // ルートコミットは全ファイルが追加扱いのため old 側が参照されることはない
+              fileRefs={{ old: `${detail.commit.sha}^`, new: detail.commit.sha }}
             />
           </>
         )}

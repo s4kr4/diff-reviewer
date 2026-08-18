@@ -16,7 +16,11 @@ interface Props {
 }
 
 export function CompareView({ repo, selection, onChangeSelection, onOpenFile }: Props) {
-  const [result, setResult] = useState<{ patch: string; commits: CommitInfo[] } | null>(null);
+  const [result, setResult] = useState<{
+    patch: string;
+    commits: CommitInfo[];
+    mergeBase: string | null;
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showCommits, setShowCommits] = useState(false);
 
@@ -100,6 +104,8 @@ export function CompareView({ repo, selection, onChangeSelection, onOpenFile }: 
           scope={`compare:${base}...${head}`}
           onOpenFile={onOpenFile(head)}
           emptyMessage={`${base} と ${head} に差分はありません`}
+          // 3点ドット比較（base...head）の old 側は merge-base のスナップショット
+          fileRefs={result.mergeBase ? { old: result.mergeBase, new: head } : undefined}
         />
       )}
     </div>

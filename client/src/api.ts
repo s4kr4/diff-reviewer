@@ -22,7 +22,7 @@ export const api = {
   repo: () => get<RepoInfo>('/api/repo'),
   workingDiff: () => get<{ patch: string }>('/api/working-diff'),
   compare: (base: string, head: string) =>
-    get<{ patch: string; commits: CommitInfo[] }>(
+    get<{ patch: string; commits: CommitInfo[]; mergeBase: string | null }>(
       `/api/compare?base=${encodeURIComponent(base)}&head=${encodeURIComponent(head)}`,
     ),
   commits: (ref: string, skip: number, limit: number) =>

@@ -2,15 +2,24 @@ import { useCallback, useMemo, useState } from 'react';
 import { FileDiff } from '@pierre/diffs/react';
 import type {
   DiffLineAnnotation,
+  FileContents,
+  FileDiffLoadedFiles,
   FileDiffMetadata,
   OnDiffLineClickProps,
 } from '@pierre/diffs';
+import { api } from '../api';
 import { useResolvedTheme } from '../useTheme';
 import type { CommentActions } from '../useComments';
 import { CommentWidget } from './CommentWidget';
 import { CopyButton } from './CopyButton';
 
 export type DiffViewType = 'unified' | 'split';
+
+// 未変更行の展開に使う、old / new 各側の完全なファイル内容を取得できる ref
+export interface FileRefs {
+  old: string;
+  new: string;
+}
 
 export const DIFF_THEMES = { light: 'github-light', dark: 'github-dark' } as const;
 
@@ -20,6 +29,7 @@ interface Props {
   commentActions: CommentActions;
   onOpenFile?: (path: string, line?: number) => void;
   anchorId: string;
+  fileRefs?: FileRefs;
 }
 
 // annotation の metadata に載せる、コメント位置の識別子
@@ -65,7 +75,14 @@ function toPierreSide(side: 'old' | 'new'): 'deletions' | 'additions' {
   return side === 'old' ? 'deletions' : 'additions';
 }
 
-export function DiffFileCard({ file, viewType, commentActions, onOpenFile, anchorId }: Props) {
+export function DiffFileCard({
+  file,
+  viewType,
+  commentActions,
+  onOpenFile,
+  anchorId,
+  fileRefs,
+}: Props) {
   const theme = useResolvedTheme();
   const [collapsed, setCollapsed] = useState(false);
   const [formTarget, setFormTarget] = useState<AnnotationMeta | null>(null);
@@ -124,6 +141,26 @@ export function DiffFileCard({ file, viewType, commentActions, onOpenFile, ancho
     );
   }, []);
 
+  // 未変更行の展開: 完全なファイル内容を返すと、ハンク間のセパレーターに展開ボタンが表示される
+  const loadDiffFiles = useMemo(() => {
+    if (!fileRefs) return undefined;
+    const load = async (ref: string, p: string): Promise<FileContents> => {
+      const res = await api.file(ref, p);
+      if (res.binary) throw new Error(`バイナリファイルのため展開できません: ${p}`);
+      return { name: p, contents: res.content, cacheKey: `${ref}:${p}` };
+    };
+    return async (fd: FileDiffMetadata): Promise<FileDiffLoadedFiles> => {
+      if (fd.type === 'rename-pure') {
+        return { oldFile: null, newFile: await load(fileRefs.new, fd.name) };
+      }
+      const [oldFile, newFile] = await Promise.all([
+        load(fileRefs.old, fd.prevName ?? fd.name),
+        load(fileRefs.new, fd.name),
+      ]);
+      return { oldFile, newFile };
+    };
+  }, [fileRefs]);
+
   const options = useMemo(
     () => ({
       diffStyle: viewType,
@@ -131,8 +168,9 @@ export function DiffFileCard({ file, viewType, commentActions, onOpenFile, ancho
       themeType: theme,
       disableFileHeader: true,
       onLineNumberClick,
+      loadDiffFiles,
     }),
-    [viewType, theme, onLineNumberClick],
+    [viewType, theme, onLineNumberClick, loadDiffFiles],
   );
 
   const { additions, deletions } = countChanges(file);
