@@ -1,5 +1,4 @@
 import express from 'express';
-import { spawn } from 'node:child_process';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -15,6 +14,7 @@ import {
   workingDiff,
 } from './git.js';
 import { CommentStore } from './comments.js';
+import { openInBrowser } from './browser.js';
 
 const usage = 'usage: pnpm start [repo-path] [--port <port>] [--open]';
 
@@ -189,12 +189,11 @@ app.listen(PORT, () => {
   if (!fs.existsSync(clientDist)) {
     console.log('diff-reviewer: client/dist が無いため API のみ提供中（開発時は Vite 側 http://localhost:5173 を開く）');
   }
-  // --open のときブラウザで開いてアクティブにする
+  // --open のときブラウザの新規ウィンドウで開いてアクティブにする
   // （dev モードは tsx watch が再起動のたびに実行するため既定では開かない）
   if (openBrowser) {
-    const opener = process.platform === 'darwin' ? 'open' : 'xdg-open';
-    spawn(opener, [url], { detached: true, stdio: 'ignore' }).on('error', () => {
-      console.log(`diff-reviewer: ブラウザを開けませんでした（${opener} が失敗）`);
+    openInBrowser(url).catch((err) => {
+      console.log(`diff-reviewer: ブラウザを開けませんでした（${err?.message ?? err}）`);
     });
   }
 });

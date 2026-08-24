@@ -38,7 +38,7 @@ pnpm build   # 初回とクライアント更新時のみ
 pnpm start /path/to/target-repo --open
 ```
 
-`--open` を付けると起動時にブラウザが自動で開く。付けない場合は http://localhost:8080 を手動で開く。
+`--open` を付けると起動時にブラウザが自動で開く（Chromium 系 / Firefox が既定ブラウザなら新規ウィンドウ、それ以外はブラウザ既定の挙動）。付けない場合は http://localhost:8080 を手動で開く。
 
 コマンドライン引数（`pnpm dev` / `pnpm start` 共通）:
 
