@@ -368,7 +368,8 @@ button {
   border: 1px solid var(--border);
   border-radius: 6px;
   margin-bottom: 16px;
-  overflow: hidden;
+  /* hidden だとスクロールコンテナ扱いになりヘッダーの sticky が効かないため clip */
+  overflow: clip;
 }
 
 .diff-card-header {
