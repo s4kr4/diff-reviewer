@@ -169,6 +169,12 @@ button {
   padding: 12px 16px;
 }
 
+/* diff の Virtualizer を兼ねるビュー。親の .app-main ではなくこの要素がスクロールする */
+.scroll-root {
+  height: 100%;
+  overflow: auto;
+}
+
 .view-header {
   display: flex;
   align-items: center;

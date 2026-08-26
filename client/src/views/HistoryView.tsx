@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Virtualizer } from '@pierre/diffs/react';
 import { api } from '../api';
 import { DiffPage } from '../components/DiffPage';
 import type { CommitInfo } from '../types';
@@ -76,7 +77,8 @@ export function HistoryView({ selectedSha, onSelect, onOpenFile }: Props) {
           </button>
         )}
       </aside>
-      <div className="commit-detail">
+      {/* Virtualizer は diff のスクロールコンテナ自身である必要があるため .commit-detail を兼ねる */}
+      <Virtualizer className="commit-detail">
         {!selectedSha && <div className="empty-state">コミットを選択してください</div>}
         {selectedSha && detail === null && <div className="empty-state">読み込み中…</div>}
         {selectedSha && detail !== null && (
@@ -106,7 +108,7 @@ export function HistoryView({ selectedSha, onSelect, onOpenFile }: Props) {
             />
           </>
         )}
-      </div>
+      </Virtualizer>
     </div>
   );
 }

@@ -214,7 +214,6 @@ export function DiffFileCard({
             options={options}
             lineAnnotations={annotations}
             renderAnnotation={renderAnnotation}
-            disableWorkerPool
           />
         ) : (
           <div className="diff-empty">差分を表示できません（バイナリファイル等）</div>

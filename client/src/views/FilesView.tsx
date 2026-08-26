@@ -166,7 +166,6 @@ function FileViewer({ target }: { target: FileTarget }) {
       file={fileContents}
       options={options}
       selectedLines={target.line ? { start: target.line, end: target.line } : null}
-      disableWorkerPool
     />
   );
 }

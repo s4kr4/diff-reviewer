@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api';
+import { Virtualizer } from '@pierre/diffs/react';
 import { DiffPage } from '../components/DiffPage';
 import type { CommitInfo, RepoInfo } from '../types';
 
@@ -41,8 +42,9 @@ export function CompareView({ repo, selection, onChangeSelection, onOpenFile }: 
     reload();
   }, [reload]);
 
+  // Virtualizer は diff のスクロールコンテナ自身である必要があるため、ビューのルートを兼ねる
   return (
-    <div className="view">
+    <Virtualizer className="view scroll-root">
       <div className="view-header compare-header">
         <label>
           base:
@@ -108,6 +110,6 @@ export function CompareView({ repo, selection, onChangeSelection, onOpenFile }: 
           fileRefs={result.mergeBase ? { old: result.mergeBase, new: head } : undefined}
         />
       )}
-    </div>
+    </Virtualizer>
   );
 }

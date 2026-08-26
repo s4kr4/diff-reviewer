@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
+import { WorkerPoolContextProvider } from '@pierre/diffs/react';
 import { api } from './api';
+import { workerFactory } from './diffWorker';
+import { DIFF_THEMES } from './components/DiffFileCard';
 import { ThemeContext, useTheme, type ThemePref } from './useTheme';
 import type { FileTarget, RepoInfo } from './types';
 import { WorkingView } from './views/WorkingView';
@@ -169,6 +172,10 @@ export default function App() {
 
   return (
     <ThemeContext.Provider value={theme}>
+    <WorkerPoolContextProvider
+      poolOptions={{ workerFactory }}
+      highlighterOptions={{ theme: DIFF_THEMES }}
+    >
     <div className="app">
       <header className="app-header">
         <span className="app-logo">diff-reviewer</span>
@@ -213,6 +220,7 @@ export default function App() {
         {tab === 'comments' && <CommentsView onJumpToScope={jumpToScope} />}
       </main>
     </div>
+    </WorkerPoolContextProvider>
     </ThemeContext.Provider>
   );
 }

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Virtualizer } from '@pierre/diffs/react';
 import { api } from '../api';
 import { DiffPage } from '../components/DiffPage';
 
@@ -31,8 +32,9 @@ export function WorkingView({ onOpenFile }: Props) {
   if (error) return <div className="empty-state error">{error}</div>;
   if (patch === null) return <div className="empty-state">読み込み中…</div>;
 
+  // Virtualizer は diff のスクロールコンテナ自身である必要があるため、ビューのルートを兼ねる
   return (
-    <div className="view">
+    <Virtualizer className="view scroll-root">
       <div className="view-header">
         <h2>作業ツリーの差分（HEAD との比較・未追跡ファイル含む）</h2>
         <button className="btn" onClick={reload}>
@@ -46,6 +48,6 @@ export function WorkingView({ onOpenFile }: Props) {
         emptyMessage="作業ツリーに変更はありません"
         fileRefs={{ old: 'HEAD', new: 'WORKING' }}
       />
-    </div>
+    </Virtualizer>
   );
 }
