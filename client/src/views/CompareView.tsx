@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api';
 import { Virtualizer } from '@pierre/diffs/react';
 import { DiffPage } from '../components/DiffPage';
+import { BranchPicker } from '../components/BranchPicker';
 import type { CommitInfo, RepoInfo } from '../types';
 
 export interface CompareSelection {
@@ -48,30 +49,22 @@ export function CompareView({ repo, selection, onChangeSelection, onOpenFile }: 
       <div className="view-header compare-header">
         <label>
           base:
-          <select
+          <BranchPicker
             value={base}
-            onChange={(e) => onChangeSelection({ base: e.target.value, head })}
-          >
-            {repo.branches.map((b) => (
-              <option key={b} value={b}>
-                {b}
-              </option>
-            ))}
-          </select>
+            options={repo.branches}
+            onChange={(v) => onChangeSelection({ base: v, head })}
+            placeholder="ブランチ名で検索…"
+          />
         </label>
         <span className="compare-arrow">←</span>
         <label>
           compare:
-          <select
+          <BranchPicker
             value={head}
-            onChange={(e) => onChangeSelection({ base, head: e.target.value })}
-          >
-            {repo.branches.map((b) => (
-              <option key={b} value={b}>
-                {b}
-              </option>
-            ))}
-          </select>
+            options={repo.branches}
+            onChange={(v) => onChangeSelection({ base, head: v })}
+            placeholder="ブランチ名で検索…"
+          />
         </label>
         <button
           className="btn"

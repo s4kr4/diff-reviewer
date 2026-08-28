@@ -549,14 +549,67 @@ button {
   font-size: 13px;
 }
 
-.compare-header select {
+.branch-picker {
+  position: relative;
+}
+
+.branch-picker input {
   font: inherit;
-  padding: 3px 6px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 4px 8px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  max-width: 260px;
+  width: 260px;
   background: var(--bg);
   color: var(--fg);
+}
+
+.branch-picker input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.branch-picker-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 20;
+  margin: 4px 0 0;
+  padding: 4px 0;
+  list-style: none;
+  min-width: 100%;
+  max-width: 480px;
+  max-height: 320px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.branch-picker-list li {
+  padding: 4px 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.branch-picker-list li.active {
+  background: var(--hover);
+}
+
+.branch-picker-list li.selected {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.branch-picker-list li.branch-picker-empty {
+  color: var(--fg-muted);
+  cursor: default;
 }
 
 .compare-arrow {
