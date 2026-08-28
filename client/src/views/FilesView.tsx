@@ -5,37 +5,12 @@ import { CopyButton } from '../components/CopyButton';
 import { DIFF_THEMES } from '../components/DiffFileCard';
 import { useResolvedTheme } from '../useTheme';
 import type { FileTarget, RepoInfo } from '../types';
+import { buildFileTree, isFileNode, type FileTreeNode } from '../fileTree';
 
 interface Props {
   repo: RepoInfo;
   target: FileTarget | null;
   onChangeTarget: (target: FileTarget | null) => void;
-}
-
-interface TreeNode {
-  name: string;
-  path: string;
-  children: Map<string, TreeNode>;
-  isFile: boolean;
-}
-
-function buildTree(paths: string[]): TreeNode {
-  const root: TreeNode = { name: '', path: '', children: new Map(), isFile: false };
-  for (const p of paths) {
-    const parts = p.split('/');
-    let node = root;
-    parts.forEach((part, i) => {
-      const isFile = i === parts.length - 1;
-      const childPath = parts.slice(0, i + 1).join('/');
-      let child = node.children.get(part);
-      if (!child) {
-        child = { name: part, path: childPath, children: new Map(), isFile };
-        node.children.set(part, child);
-      }
-      node = child;
-    });
-  }
-  return root;
 }
 
 function TreeEntry({
@@ -44,7 +19,7 @@ function TreeEntry({
   selectedPath,
   onSelectFile,
 }: {
-  node: TreeNode;
+  node: FileTreeNode<string>;
   depth: number;
   selectedPath: string | undefined;
   onSelectFile: (path: string) => void;
@@ -57,7 +32,7 @@ function TreeEntry({
     if (containsSelection) setOpen(true);
   }, [containsSelection]);
 
-  if (node.isFile) {
+  if (isFileNode(node)) {
     return (
       <button
         className={`tree-item ${node.path === selectedPath ? 'selected' : ''}`}
@@ -68,13 +43,6 @@ function TreeEntry({
       </button>
     );
   }
-
-  const dirs = [...node.children.values()].filter((n) => !n.isFile);
-  const files = [...node.children.values()].filter((n) => n.isFile);
-  const sorted = [
-    ...dirs.sort((a, b) => a.name.localeCompare(b.name)),
-    ...files.sort((a, b) => a.name.localeCompare(b.name)),
-  ];
 
   return (
     <div>
@@ -90,11 +58,11 @@ function TreeEntry({
       )}
       {open && (
         <div>
-          {sorted.map((child) => (
+          {node.children.map((child) => (
             <TreeEntry
               key={child.path}
               node={child}
-              depth={depth + (node.path === '' ? 0 : 1)}
+              depth={depth + 1}
               selectedPath={selectedPath}
               onSelectFile={onSelectFile}
             />
@@ -195,7 +163,7 @@ export function FilesView({ repo, target, onChangeTarget }: Props) {
     return files.filter((f) => terms.every((t) => f.toLowerCase().includes(t)));
   }, [files, filter]);
 
-  const tree = useMemo(() => buildTree(filtered), [filtered]);
+  const tree = useMemo(() => buildFileTree(filtered, (p) => p), [filtered]);
   const refOptions = ['WORKING', 'HEAD', ...repo.branches];
 
   return (

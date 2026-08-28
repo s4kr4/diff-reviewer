@@ -303,9 +303,7 @@ button {
   background: var(--bg-subtle);
 }
 
-.diff-file-list ul {
-  list-style: none;
-  margin: 0;
+.diff-file-tree {
   padding: 4px 0;
 }
 
@@ -324,12 +322,31 @@ button {
   background: var(--bg-subtle);
 }
 
+.diff-file-tree-dir {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: none;
+  padding: 3px 12px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--fg-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.diff-file-tree-dir:hover {
+  background: var(--bg-subtle);
+}
+
 .file-list-path {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  direction: rtl;
-  text-align: left;
 }
 
 .file-list-stats {

@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react';
 import { processPatch } from '@pierre/diffs';
 import type { FileDiffMetadata } from '@pierre/diffs';
 import { useComments } from '../useComments';
+import { buildFileTree, isFileNode, type FileTreeNode } from '../fileTree';
+import type { CommentItem } from '../types';
 import {
   DiffFileCard,
   commentPath,
@@ -10,6 +12,12 @@ import {
   type DiffViewType,
   type FileRefs,
 } from './DiffFileCard';
+
+// ファイル一覧ツリーの葉に載せる情報。index は diff 本体側のアンカー ID と対応する
+interface DiffFileEntry {
+  file: FileDiffMetadata;
+  index: number;
+}
 
 interface Props {
   patch: string;
@@ -34,6 +42,16 @@ export function DiffPage({ patch, scope, onOpenFile, emptyMessage, fileRefs }: P
     }
   }, [patch]);
 
+  const tree = useMemo(
+    () =>
+      buildFileTree(
+        files.map((file, index): DiffFileEntry => ({ file, index })),
+        (e) => e.file.name,
+        { compactDirs: true },
+      ),
+    [files],
+  );
+
   if (files.length === 0) {
     return <div className="empty-state">{emptyMessage ?? '差分はありません'}</div>;
   }
@@ -56,26 +74,9 @@ export function DiffPage({ patch, scope, onOpenFile, emptyMessage, fileRefs }: P
             <span className="stat-del">−{totals.deletions}</span>
           </span>
         </div>
-        <ul>
-          {files.map((file, i) => {
-            const { additions, deletions } = countChanges(file);
-            const count = commentActions.comments.filter(
-              (c) => c.file === commentPath(file),
-            ).length;
-            return (
-              <li key={`${file.prevName ?? ''}:${file.name}`}>
-                <a href={`#file-${i}`} title={displayPath(file)}>
-                  <span className="file-list-path">{displayPath(file)}</span>
-                  <span className="file-list-stats">
-                    {count > 0 && <span className="badge badge-comment">{count}</span>}
-                    <span className="stat-add">+{additions}</span>
-                    <span className="stat-del">−{deletions}</span>
-                  </span>
-                </a>
-              </li>
-            );
-          })}
-        </ul>
+        <div className="diff-file-tree">
+          <DiffFileTreeEntry node={tree} depth={0} comments={commentActions.comments} />
+        </div>
       </aside>
       <div className="diff-main">
         <div className="diff-toolbar">
@@ -109,4 +110,73 @@ export function DiffPage({ patch, scope, onOpenFile, emptyMessage, fileRefs }: P
       </div>
     </div>
   );
+}
+
+function DiffFileTreeEntry({
+  node,
+  depth,
+  comments,
+}: {
+  node: FileTreeNode<DiffFileEntry>;
+  depth: number;
+  comments: CommentItem[];
+}) {
+  // 差分のファイル数は限られるため、ディレクトリは初期状態で全て展開する
+  const [open, setOpen] = useState(true);
+
+  if (isFileNode(node)) {
+    const { file, index } = node.item;
+    const { additions, deletions } = countChanges(file);
+    const count = comments.filter((c) => c.file === commentPath(file)).length;
+    // リネームは旧ファイル名（ベース名）を添えて表示する。フルパスは title で確認できる
+    const prevBase =
+      file.prevName && file.prevName !== file.name ? basename(file.prevName) : null;
+    return (
+      <a
+        href={`#file-${index}`}
+        title={displayPath(file)}
+        style={{ paddingLeft: depth * 12 + 12 }}
+      >
+        <span className="file-list-path">
+          {prevBase !== null && <span className="muted">{prevBase} → </span>}
+          {node.name}
+        </span>
+        <span className="file-list-stats">
+          {count > 0 && <span className="badge badge-comment">{count}</span>}
+          <span className="stat-add">+{additions}</span>
+          <span className="stat-del">−{deletions}</span>
+        </span>
+      </a>
+    );
+  }
+
+  const isRoot = node.path === '';
+  return (
+    <div>
+      {!isRoot && (
+        <button
+          className="diff-file-tree-dir"
+          style={{ paddingLeft: (depth - 1) * 12 + 12 }}
+          onClick={() => setOpen((o) => !o)}
+          title={node.path}
+        >
+          {open ? '▾ ' : '▸ '}
+          {node.name}/
+        </button>
+      )}
+      {open &&
+        node.children.map((child) => (
+          <DiffFileTreeEntry
+            key={child.path}
+            node={child}
+            depth={isRoot ? depth : depth + 1}
+            comments={comments}
+          />
+        ))}
+    </div>
+  );
+}
+
+function basename(path: string): string {
+  return path.slice(path.lastIndexOf('/') + 1);
 }
