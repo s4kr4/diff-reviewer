@@ -367,6 +367,15 @@ button {
   margin-bottom: 8px;
 }
 
+.wrap-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  user-select: none;
+}
+
 .view-toggle {
   display: inline-flex;
   border: 1px solid var(--border);

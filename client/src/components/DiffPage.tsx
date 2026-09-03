@@ -30,6 +30,7 @@ interface Props {
 
 export function DiffPage({ patch, scope, onOpenFile, emptyMessage, fileRefs }: Props) {
   const [viewType, setViewType] = useState<DiffViewType>('unified');
+  const [wrap, setWrap] = useState(true);
   const commentActions = useComments(scope);
 
   const files = useMemo<FileDiffMetadata[]>(() => {
@@ -94,6 +95,14 @@ export function DiffPage({ patch, scope, onOpenFile, emptyMessage, fileRefs }: P
               Split
             </button>
           </div>
+          <label className="wrap-toggle">
+            <input
+              type="checkbox"
+              checked={wrap}
+              onChange={(e) => setWrap(e.target.checked)}
+            />
+            折り返し
+          </label>
           <span className="hint">行番号をクリックでコメント追加</span>
         </div>
         {files.map((file, i) => (
@@ -101,6 +110,7 @@ export function DiffPage({ patch, scope, onOpenFile, emptyMessage, fileRefs }: P
             key={`${file.prevName ?? ''}:${file.name}`}
             file={file}
             viewType={viewType}
+            wrap={wrap}
             commentActions={commentActions}
             onOpenFile={onOpenFile}
             anchorId={`file-${i}`}

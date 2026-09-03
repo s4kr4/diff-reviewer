@@ -26,6 +26,7 @@ export const DIFF_THEMES = { light: 'github-light', dark: 'github-dark' } as con
 interface Props {
   file: FileDiffMetadata;
   viewType: DiffViewType;
+  wrap: boolean;
   commentActions: CommentActions;
   onOpenFile?: (path: string, line?: number) => void;
   anchorId: string;
@@ -78,6 +79,7 @@ function toPierreSide(side: 'old' | 'new'): 'deletions' | 'additions' {
 export function DiffFileCard({
   file,
   viewType,
+  wrap,
   commentActions,
   onOpenFile,
   anchorId,
@@ -164,13 +166,14 @@ export function DiffFileCard({
   const options = useMemo(
     () => ({
       diffStyle: viewType,
+      overflow: wrap ? ('wrap' as const) : ('scroll' as const),
       theme: DIFF_THEMES,
       themeType: theme,
       disableFileHeader: true,
       onLineNumberClick,
       loadDiffFiles,
     }),
-    [viewType, theme, onLineNumberClick, loadDiffFiles],
+    [viewType, wrap, theme, onLineNumberClick, loadDiffFiles],
   );
 
   const { additions, deletions } = countChanges(file);
