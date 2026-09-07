@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { processPatch } from '@pierre/diffs';
 import type { FileDiffMetadata } from '@pierre/diffs';
 import { useComments } from '../useComments';
+import { useCollapsedFiles } from '../useCollapsedFiles';
 import { buildFileTree, isFileNode, type FileTreeNode } from '../fileTree';
 import type { CommentItem } from '../types';
 import {
@@ -32,6 +33,7 @@ export function DiffPage({ patch, scope, onOpenFile, emptyMessage, fileRefs }: P
   const [viewType, setViewType] = useState<DiffViewType>('unified');
   const [wrap, setWrap] = useState(true);
   const commentActions = useComments(scope);
+  const collapsedFiles = useCollapsedFiles(scope);
 
   const files = useMemo<FileDiffMetadata[]>(() => {
     if (!patch.trim()) return [];
@@ -111,6 +113,8 @@ export function DiffPage({ patch, scope, onOpenFile, emptyMessage, fileRefs }: P
             file={file}
             viewType={viewType}
             wrap={wrap}
+            collapsed={collapsedFiles.isCollapsed(commentPath(file))}
+            onToggleCollapsed={() => collapsedFiles.toggle(commentPath(file))}
             commentActions={commentActions}
             onOpenFile={onOpenFile}
             anchorId={`file-${i}`}

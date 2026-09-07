@@ -27,6 +27,8 @@ interface Props {
   file: FileDiffMetadata;
   viewType: DiffViewType;
   wrap: boolean;
+  collapsed: boolean;
+  onToggleCollapsed: () => void;
   commentActions: CommentActions;
   onOpenFile?: (path: string, line?: number) => void;
   anchorId: string;
@@ -80,13 +82,14 @@ export function DiffFileCard({
   file,
   viewType,
   wrap,
+  collapsed,
+  onToggleCollapsed,
   commentActions,
   onOpenFile,
   anchorId,
   fileRefs,
 }: Props) {
   const theme = useResolvedTheme();
-  const [collapsed, setCollapsed] = useState(false);
   const [formTarget, setFormTarget] = useState<AnnotationMeta | null>(null);
 
   const filePath = commentPath(file);
@@ -185,7 +188,7 @@ export function DiffFileCard({
       <header className="diff-card-header">
         <button
           className="collapse-btn"
-          onClick={() => setCollapsed((c) => !c)}
+          onClick={onToggleCollapsed}
           title={collapsed ? '展開' : '折りたたみ'}
         >
           {collapsed ? '▸' : '▾'}
