@@ -1,43 +1,55 @@
 import { useCallback, useEffect, useState } from 'react';
 
 // diff のファイルカードの折りたたみ状態を scope 単位で保持するフック。
+// ファイルごとに既定の開閉状態が異なる（変更行数が多いファイルは既定で折りたたむ）ため、
+// 保存するのは「ユーザーが明示的に切り替えたファイルの開閉状態」だけで、
+// 記録の無いファイルは呼び出し側から渡された既定値に従う。
 // sessionStorage に保存するため、タブ切り替えやリロードをまたいで復元される
 // （ブラウザのタブを閉じれば消える）。
+
+// ファイルパス → 折りたたみ中なら true
+type Overrides = Record<string, boolean>;
 
 function storageKey(scope: string): string {
   return `diff-reviewer:collapsed:${scope}`;
 }
 
-function load(scope: string): Set<string> {
+function load(scope: string): Overrides {
   try {
     const raw = sessionStorage.getItem(storageKey(scope));
-    return new Set(raw ? (JSON.parse(raw) as string[]) : []);
+    if (!raw) return {};
+    const parsed: unknown = JSON.parse(raw);
+    // 旧形式（折りたたんだパスの配列）が残っていれば読み替える
+    if (Array.isArray(parsed)) {
+      return Object.fromEntries(parsed.map((path) => [String(path), true]));
+    }
+    if (parsed && typeof parsed === 'object') return parsed as Overrides;
+    return {};
   } catch {
-    return new Set();
+    return {};
   }
 }
 
 export interface CollapsedFiles {
-  isCollapsed: (path: string) => boolean;
-  toggle: (path: string) => void;
+  isCollapsed: (path: string, defaultCollapsed: boolean) => boolean;
+  toggle: (path: string, defaultCollapsed: boolean) => void;
 }
 
 export function useCollapsedFiles(scope: string): CollapsedFiles {
-  const [collapsed, setCollapsed] = useState(() => load(scope));
+  const [overrides, setOverrides] = useState(() => load(scope));
 
   // DiffPage は mount したまま scope だけ変わることがある（base / head の変更等）
   useEffect(() => {
-    setCollapsed(load(scope));
+    setOverrides(load(scope));
   }, [scope]);
 
   const toggle = useCallback(
-    (path: string) => {
-      setCollapsed((prev) => {
-        const next = new Set(prev);
-        if (next.has(path)) next.delete(path);
-        else next.add(path);
+    (path: string, defaultCollapsed: boolean) => {
+      setOverrides((prev) => {
+        const current = prev[path] ?? defaultCollapsed;
+        const next = { ...prev, [path]: !current };
         try {
-          sessionStorage.setItem(storageKey(scope), JSON.stringify([...next]));
+          sessionStorage.setItem(storageKey(scope), JSON.stringify(next));
         } catch {
           // ストレージが使えない環境ではメモリ上の状態のみで動作させる
         }
@@ -47,7 +59,10 @@ export function useCollapsedFiles(scope: string): CollapsedFiles {
     [scope],
   );
 
-  const isCollapsed = useCallback((path: string) => collapsed.has(path), [collapsed]);
+  const isCollapsed = useCallback(
+    (path: string, defaultCollapsed: boolean) => overrides[path] ?? defaultCollapsed,
+    [overrides],
+  );
 
   return { isCollapsed, toggle };
 }

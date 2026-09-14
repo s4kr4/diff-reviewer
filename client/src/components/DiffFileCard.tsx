@@ -66,6 +66,14 @@ export function countChanges(file: FileDiffMetadata): {
   );
 }
 
+// 変更行数（追加 + 削除）がこの値以上のファイルは、既定で diff 本体を省略表示する
+export const LARGE_DIFF_LINES = 500;
+
+export function isLargeDiff(file: FileDiffMetadata): boolean {
+  const { additions, deletions } = countChanges(file);
+  return additions + deletions >= LARGE_DIFF_LINES;
+}
+
 const TYPE_LABEL: Record<string, { label: string; className: string }> = {
   new: { label: '追加', className: 'badge-add' },
   deleted: { label: '削除', className: 'badge-delete' },
@@ -180,6 +188,7 @@ export function DiffFileCard({
   );
 
   const { additions, deletions } = countChanges(file);
+  const large = additions + deletions >= LARGE_DIFF_LINES;
   const typeInfo = TYPE_LABEL[file.type] ?? TYPE_LABEL.change;
   const commentCount = fileComments.length;
 
@@ -213,17 +222,27 @@ export function DiffFileCard({
           </button>
         )}
       </header>
-      {!collapsed &&
-        (file.hunks.length > 0 ? (
-          <FileDiff<AnnotationMeta>
-            fileDiff={file}
-            options={options}
-            lineAnnotations={annotations}
-            renderAnnotation={renderAnnotation}
-          />
-        ) : (
-          <div className="diff-empty">差分を表示できません（バイナリファイル等）</div>
-        ))}
+      {collapsed ? (
+        // 変更行数が多いファイルは既定で省略されるため、その旨と展開手段を本文位置に示す。
+        // 小さいファイルを手動で折りたたんだ場合はヘッダーのみにする
+        large && (
+          <div className="diff-collapsed-notice">
+            <span>変更行数が多いため省略しています</span>
+            <button className="btn btn-small" onClick={onToggleCollapsed}>
+              差分を表示
+            </button>
+          </div>
+        )
+      ) : file.hunks.length > 0 ? (
+        <FileDiff<AnnotationMeta>
+          fileDiff={file}
+          options={options}
+          lineAnnotations={annotations}
+          renderAnnotation={renderAnnotation}
+        />
+      ) : (
+        <div className="diff-empty">差分を表示できません（バイナリファイル等）</div>
+      )}
     </section>
   );
 }

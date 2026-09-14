@@ -491,6 +491,22 @@ button {
   color: var(--fg-muted);
 }
 
+/* 変更行数が多いファイルを省略表示しているときの案内 */
+.diff-collapsed-notice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  color: var(--fg-muted);
+  font-size: 13px;
+}
+
+/* .btn-small の margin-left: auto はヘッダー内での右寄せ用なので、案内内では無効にする */
+.diff-collapsed-notice .btn-small {
+  margin-left: 0;
+}
+
 /* ---------- comments ---------- */
 
 .comment-widget {

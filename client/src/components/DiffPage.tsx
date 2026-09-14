@@ -10,6 +10,7 @@ import {
   commentPath,
   countChanges,
   displayPath,
+  isLargeDiff,
   type DiffViewType,
   type FileRefs,
 } from './DiffFileCard';
@@ -113,8 +114,8 @@ export function DiffPage({ patch, scope, onOpenFile, emptyMessage, fileRefs }: P
             file={file}
             viewType={viewType}
             wrap={wrap}
-            collapsed={collapsedFiles.isCollapsed(commentPath(file))}
-            onToggleCollapsed={() => collapsedFiles.toggle(commentPath(file))}
+            collapsed={collapsedFiles.isCollapsed(commentPath(file), isLargeDiff(file))}
+            onToggleCollapsed={() => collapsedFiles.toggle(commentPath(file), isLargeDiff(file))}
             commentActions={commentActions}
             onOpenFile={onOpenFile}
             anchorId={`file-${i}`}
