@@ -31,7 +31,7 @@ interface Props {
 }
 
 export function DiffPage({ patch, scope, onOpenFile, emptyMessage, fileRefs }: Props) {
-  const [viewType, setViewType] = useState<DiffViewType>('unified');
+  const [viewType, setViewType] = useState<DiffViewType>('split');
   const [wrap, setWrap] = useState(true);
   const commentActions = useComments(scope);
   const collapsedFiles = useCollapsedFiles(scope);
