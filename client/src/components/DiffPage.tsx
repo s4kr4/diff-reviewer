@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { processPatch } from '@pierre/diffs';
 import type { FileDiffMetadata } from '@pierre/diffs';
+import { createHasher } from '../contentHash';
 import { useComments } from '../useComments';
 import { useCollapsedFiles } from '../useCollapsedFiles';
 import { buildFileTree, isFileNode, type FileTreeNode } from '../fileTree';
@@ -30,6 +31,24 @@ interface Props {
   fileRefs?: FileRefs;
 }
 
+// @pierre/diffs は cacheKey の無い diff にファイルパスをキーとして自動付与し、
+// 同じキーの diff は内容が変わっていても再描画・再ハイライトしない
+// （Worker Pool のハイライト結果もこのキーで保持される）。
+// 再取得した patch で内容が変わったことを検知できるよう、内容から導出したキーを付ける
+function fileDiffCacheKey(file: FileDiffMetadata): string {
+  const hasher = createHasher();
+  hasher.update(`${file.type}\0${file.prevName ?? ''}\0${file.name}\0`);
+  for (const hunk of file.hunks) {
+    hasher.update(
+      `@${hunk.deletionStart},${hunk.deletionCount},${hunk.additionStart},${hunk.additionCount}\0`,
+    );
+  }
+  for (const line of file.deletionLines) hasher.update(line).update('\0');
+  hasher.update('\x01');
+  for (const line of file.additionLines) hasher.update(line).update('\0');
+  return `${file.name}#${hasher.digest()}`;
+}
+
 export function DiffPage({ patch, scope, onOpenFile, emptyMessage, fileRefs }: Props) {
   const [viewType, setViewType] = useState<DiffViewType>('split');
   const [wrap, setWrap] = useState(true);
@@ -39,7 +58,9 @@ export function DiffPage({ patch, scope, onOpenFile, emptyMessage, fileRefs }: P
   const files = useMemo<FileDiffMetadata[]>(() => {
     if (!patch.trim()) return [];
     try {
-      return processPatch(patch).files;
+      const { files } = processPatch(patch);
+      for (const file of files) file.cacheKey = fileDiffCacheKey(file);
+      return files;
     } catch (err) {
       console.error('diff parse error', err);
       return [];

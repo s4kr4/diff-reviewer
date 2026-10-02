@@ -8,6 +8,7 @@ import type {
   OnDiffLineClickProps,
 } from '@pierre/diffs';
 import { api } from '../api';
+import { hashString } from '../contentHash';
 import { useResolvedTheme } from '../useTheme';
 import type { CommentActions } from '../useComments';
 import { CommentWidget } from './CommentWidget';
@@ -160,7 +161,13 @@ export function DiffFileCard({
     const load = async (ref: string, p: string): Promise<FileContents> => {
       const res = await api.file(ref, p);
       if (res.binary) throw new Error(`バイナリファイルのため展開できません: ${p}`);
-      return { name: p, contents: res.content, cacheKey: `${ref}:${p}` };
+      // WORKING や HEAD のような可変 ref では同じ ref とパスでも内容が変わるため、
+      // Worker Pool のキャッシュキーに内容ハッシュを含める
+      return {
+        name: p,
+        contents: res.content,
+        cacheKey: `${ref}:${p}#${hashString(res.content)}`,
+      };
     };
     return async (fd: FileDiffMetadata): Promise<FileDiffLoadedFiles> => {
       if (fd.type === 'rename-pure') {
