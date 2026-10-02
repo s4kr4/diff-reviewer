@@ -14,12 +14,15 @@ import { CommentsView } from './views/CommentsView';
 type Tab = 'working' | 'compare' | 'history' | 'files' | 'comments';
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: 'working', label: '作業ツリー' },
   { id: 'compare', label: 'ブランチ比較' },
+  { id: 'working', label: '作業ツリー' },
   { id: 'history', label: '履歴' },
   { id: 'files', label: 'ファイル' },
   { id: 'comments', label: 'コメント' },
 ];
+
+// 起動直後に開くタブ。URL の ?tab= が無いときの解決と、URL 生成時の省略の両方で使う
+const DEFAULT_TAB: Tab = 'compare';
 
 const THEME_LABEL: Record<ThemePref, string> = {
   auto: '🌓 自動',
@@ -44,7 +47,7 @@ interface UrlState {
 function parseUrlState(): UrlState {
   const params = new URLSearchParams(location.search);
   const rawTab = params.get('tab');
-  const tab: Tab = TABS.some((t) => t.id === rawTab) ? (rawTab as Tab) : 'working';
+  const tab: Tab = TABS.some((t) => t.id === rawTab) ? (rawTab as Tab) : DEFAULT_TAB;
   const base = params.get('base');
   const head = params.get('head');
   const path = params.get('path');
@@ -62,7 +65,7 @@ function parseUrlState(): UrlState {
 // アクティブなタブの状態だけを URL クエリに載せる
 function buildSearch(state: UrlState): string {
   const params = new URLSearchParams();
-  if (state.tab !== 'working') params.set('tab', state.tab);
+  if (state.tab !== DEFAULT_TAB) params.set('tab', state.tab);
   if (state.tab === 'compare' && state.compareSel) {
     params.set('base', state.compareSel.base);
     params.set('head', state.compareSel.head);
