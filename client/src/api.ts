@@ -43,6 +43,8 @@ export const api = {
     ),
   addComment: (input: Pick<CommentItem, 'scope' | 'file' | 'side' | 'line' | 'body'>) =>
     send<CommentItem>('POST', '/api/comments', input),
+  replyComment: (parentId: string, body: string) =>
+    send<CommentItem>('POST', `/api/comments/${parentId}/replies`, { body }),
   updateComment: (id: string, body: string) =>
     send<CommentItem>('PUT', `/api/comments/${id}`, { body }),
   deleteComment: (id: string) => send<{ ok: boolean }>('DELETE', `/api/comments/${id}`),

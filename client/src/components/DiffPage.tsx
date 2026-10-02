@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { processPatch } from '@pierre/diffs';
 import type { FileDiffMetadata } from '@pierre/diffs';
 import { createHasher } from '../contentHash';
+import { countThreads } from '../threads';
 import { useComments } from '../useComments';
 import { useCollapsedFiles } from '../useCollapsedFiles';
 import { buildFileTree, isFileNode, type FileTreeNode } from '../fileTree';
@@ -163,7 +164,7 @@ function DiffFileTreeEntry({
   if (isFileNode(node)) {
     const { file, index } = node.item;
     const { additions, deletions } = countChanges(file);
-    const count = comments.filter((c) => c.file === commentPath(file)).length;
+    const count = countThreads(comments.filter((c) => c.file === commentPath(file)));
     // リネームは旧ファイル名（ベース名）を添えて表示する。フルパスは title で確認できる
     const prevBase =
       file.prevName && file.prevName !== file.name ? basename(file.prevName) : null;

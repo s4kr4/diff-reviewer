@@ -23,6 +23,10 @@ export interface CommentItem {
   side: 'old' | 'new';
   line: number;
   body: string;
+  // スレッドのルートコメントの id。ルートコメント自身は null。返信も位置情報（scope 〜 line）をルートと同じ値で持つ
+  parentId: string | null;
+  // 投稿者。UI からの投稿は 'user'、エージェントからの返信は任意のラベル（例: 'Claude'）
+  author: string;
   createdAt: string;
   updatedAt: string;
 }

@@ -9,6 +9,7 @@
 - **履歴**: コミット一覧から選択して各コミットの差分を閲覧
 - **ファイル**: 任意の ref（作業ツリー / ブランチ / コミット）のファイルツリーとシンタックスハイライト付きビューア。diff の「ファイルを開く」から該当行へジャンプ可能
 - **行コメント**: diff の行番号クリックでコメントを追加。対象リポジトリの `.git/diff-reviewer-comments.json` にローカル保存（作業ツリーを汚さない）
+- **スレッド**: コメントに返信できる。エージェント（Claude 等）が API から返信すると投稿者名付きで表示される。コメントタブでもスレッド単位で確認・返信できる
 - Unified / Split 表示切り替え、シンタックスハイライト付き diff
 - ハンク間で折りたたまれた未変更行の展開（GitHub PR と同様の展開ボタン）
 - 変更行数が多いファイル（追加 + 削除が 500 行以上）は既定で diff 本体を省略表示し、「差分を表示」で展開。ファイルごとの開閉状態はブラウザのタブを閉じるまで保持
@@ -63,7 +64,17 @@ diff-reviewer/
 
 ## コメントデータ
 
-行コメントは対象リポジトリの `<git dir>/diff-reviewer-comments.json` に保存される（`git rev-parse --absolute-git-dir` で場所を特定できる）。エージェント等が機械的に読む場合はこのファイルを直接読むか、サーバー起動中なら `GET /api/comments` を使う。各コメントは `scope`（`working` / `compare:<base>...<head>` / `commit:<sha>`）・`file`・`side`（`new`=変更後 / `old`=変更前）・`line`・`body` を持つ。
+行コメントは対象リポジトリの `<git dir>/diff-reviewer-comments.json` に保存される（`git rev-parse --absolute-git-dir` で場所を特定できる）。エージェント等が機械的に読む場合はこのファイルを直接読むか、サーバー起動中なら `GET /api/comments` を使う。
+
+各コメントは `scope`（`working` / `compare:<base>...<head>` / `commit:<sha>`）・`file`・`side`（`new`=変更後 / `old`=変更前）・`line`・`body` に加えて、スレッド用の `parentId`（ルートコメントは `null`、返信はルートの `id`）と `author`（UI からの投稿は `user`、エージェントの返信は任意のラベル）を持つ。返信の位置情報（`scope` 〜 `line`）はルートと同じ値になる。スレッド対応前の JSON（`parentId` / `author` が無い）も読み込み時に補われる。
+
+| メソッド | パス | 説明 |
+| --- | --- | --- |
+| GET | `/api/comments?scope=<scope>` | 一覧（返信を含む）。`scope` は省略可 |
+| POST | `/api/comments` | ルートコメントを追加。`scope, file, side, line, body`（`author` は省略時 `user`） |
+| POST | `/api/comments/:id/replies` | スレッドに返信。`body`（`author` は省略時 `user`）。位置情報はルートから引き継ぎ、返信への返信も同じスレッドに入る |
+| PUT | `/api/comments/:id` | 本文を更新。`body` |
+| DELETE | `/api/comments/:id` | 削除。ルートを削除するとその返信もまとめて削除される |
 
 ## 既知の制限
 

@@ -5,6 +5,7 @@ import type { CommentItem } from './types';
 export interface CommentActions {
   comments: CommentItem[];
   add: (input: Pick<CommentItem, 'file' | 'side' | 'line' | 'body'>) => Promise<void>;
+  reply: (parentId: string, body: string) => Promise<void>;
   update: (id: string, body: string) => Promise<void>;
   remove: (id: string) => Promise<void>;
 }
@@ -29,6 +30,14 @@ export function useComments(scope: string): CommentActions {
     [scope, reload],
   );
 
+  const reply = useCallback(
+    async (parentId: string, body: string) => {
+      await api.replyComment(parentId, body);
+      await reload();
+    },
+    [reload],
+  );
+
   const update = useCallback(
     async (id: string, body: string) => {
       await api.updateComment(id, body);
@@ -45,5 +54,5 @@ export function useComments(scope: string): CommentActions {
     [reload],
   );
 
-  return { comments, add, update, remove };
+  return { comments, add, reply, update, remove };
 }

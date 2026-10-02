@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
 import type { CommentItem } from '../types';
+import { buildThreads, type CommentThread } from '../threads';
+import { CommentThreadCard } from '../components/CommentThreadCard';
 
 interface Props {
   onJumpToScope: (scope: string) => void;
@@ -23,6 +25,9 @@ export function CommentsView({ onJumpToScope }: Props) {
       .then(({ comments }) => setComments(comments))
       .catch((err) => setError(err.message));
 
+  // 変更系 API の後に一覧を読み直す
+  const mutate = (p: Promise<unknown>) => p.then(reload).catch((err) => setError(err.message));
+
   useEffect(() => {
     reload();
   }, []);
@@ -32,42 +37,43 @@ export function CommentsView({ onJumpToScope }: Props) {
     return <div className="empty-state">コメントはまだありません（diff の行番号クリックで追加できます）</div>;
   }
 
+  // スレッドはルートと返信で scope が同じなので、scope ごとに分けてからスレッドにまとめる
   const byScope = new Map<string, CommentItem[]>();
   for (const c of comments) {
     const list = byScope.get(c.scope) ?? [];
     list.push(c);
     byScope.set(c.scope, list);
   }
+  const threadsByScope = [...byScope.entries()].map(
+    ([scope, list]): [string, CommentThread[]] => [scope, buildThreads(list)],
+  );
 
   return (
     <div className="view comments-view">
-      {[...byScope.entries()].map(([scope, list]) => (
+      {threadsByScope.map(([scope, threads]) => (
         <section key={scope} className="comment-scope">
           <h2>
             <button className="link-btn" onClick={() => onJumpToScope(scope)}>
               {scopeLabel(scope)}
             </button>
-            <span className="muted">（{list.length} 件）</span>
+            <span className="muted">（{threads.length} 件）</span>
           </h2>
-          {list.map((c) => (
-            <div key={c.id} className="comment-row">
-              <div className="comment-row-loc">
-                <code>
-                  {c.file}:{c.line}
-                </code>
-                <span className="muted"> [{c.side === 'old' ? '旧' : '新'}]</span>
-                <button
-                  className="link-btn danger"
-                  onClick={async () => {
-                    await api.deleteComment(c.id);
-                    reload();
-                  }}
-                >
-                  削除
-                </button>
-              </div>
-              <div className="comment-body">{c.body}</div>
-            </div>
+          {threads.map((t) => (
+            <CommentThreadCard
+              key={t.root.id}
+              thread={t}
+              header={
+                <div className="comment-thread-header">
+                  <code>
+                    {t.root.file}:{t.root.line}
+                  </code>
+                  <span className="muted">[{t.root.side === 'old' ? '旧' : '新'}]</span>
+                </div>
+              }
+              onReply={(parentId, body) => mutate(api.replyComment(parentId, body))}
+              onUpdate={(id, body) => mutate(api.updateComment(id, body))}
+              onDelete={(id) => mutate(api.deleteComment(id))}
+            />
           ))}
         </section>
       ))}

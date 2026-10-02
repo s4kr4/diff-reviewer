@@ -517,14 +517,50 @@ button {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', sans-serif;
 }
 
-.comment-entry,
-.comment-form {
+/* スレッド（ルートコメント + 返信）と、新規コメント用フォームの枠 */
+.comment-thread,
+.comment-new {
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 6px;
-  padding: 8px 12px;
   margin: 4px 0;
   max-width: 720px;
+  overflow: hidden;
+}
+
+/* コメントタブでの位置表示（ファイル・行）。スレッド枠の上部に載せる */
+.comment-thread-header {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  font-size: 12px;
+  padding: 6px 12px;
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border);
+}
+
+.comment-entry {
+  padding: 8px 12px;
+}
+
+.comment-entry + .comment-entry {
+  border-top: 1px solid var(--border);
+}
+
+/* 返信はルートより一段下げてスレッドの階層を示す */
+.comment-reply {
+  padding-left: 28px;
+}
+
+/* エージェントからのコメントは左端の帯で区別する */
+.comment-by-agent {
+  box-shadow: inset 3px 0 0 var(--done-fg);
+}
+
+.comment-thread-footer {
+  border-top: 1px solid var(--border);
+  padding: 6px 12px;
+  font-size: 12px;
 }
 
 .comment-meta {
@@ -533,6 +569,17 @@ button {
   font-size: 11px;
   color: var(--fg-muted);
   margin-bottom: 4px;
+}
+
+.comment-meta-author {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.badge-author {
+  background: var(--done-subtle);
+  color: var(--done-fg);
 }
 
 .comment-meta-actions {
@@ -563,6 +610,11 @@ button {
   display: flex;
   gap: 8px;
   margin-top: 6px;
+}
+
+/* 新規コメント枠の中ではフォーム自体に余白を持たせ、編集・返信では親要素の余白に任せる */
+.comment-new .comment-form {
+  padding: 8px 12px;
 }
 
 /* ---------- compare ---------- */
@@ -826,18 +878,7 @@ button {
   padding-bottom: 6px;
 }
 
-.comment-row {
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 8px 12px;
-  margin-bottom: 8px;
+.comments-view .comment-thread {
+  margin: 0 0 8px;
   max-width: 800px;
-}
-
-.comment-row-loc {
-  display: flex;
-  gap: 8px;
-  align-items: baseline;
-  font-size: 12px;
-  margin-bottom: 4px;
 }

@@ -9,6 +9,7 @@ import type {
 } from '@pierre/diffs';
 import { api } from '../api';
 import { hashString } from '../contentHash';
+import { countThreads } from '../threads';
 import { useResolvedTheme } from '../useTheme';
 import type { CommentActions } from '../useComments';
 import { CommentWidget } from './CommentWidget';
@@ -138,6 +139,7 @@ export function DiffFileCard({
             commentActions.add({ file: filePath, side: meta.side, line: meta.line, body });
             setFormTarget(null);
           }}
+          onReply={(parentId, body) => commentActions.reply(parentId, body)}
           onUpdate={(id, body) => commentActions.update(id, body)}
           onDelete={(id) => commentActions.remove(id)}
           onCloseForm={() => setFormTarget(null)}
@@ -197,7 +199,8 @@ export function DiffFileCard({
   const { additions, deletions } = countChanges(file);
   const large = additions + deletions >= LARGE_DIFF_LINES;
   const typeInfo = TYPE_LABEL[file.type] ?? TYPE_LABEL.change;
-  const commentCount = fileComments.length;
+  // バッジにはスレッド数（返信を除く指摘の件数）を出す
+  const commentCount = countThreads(fileComments);
 
   return (
     <section className="diff-card" id={anchorId}>

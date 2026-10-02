@@ -68,9 +68,15 @@ const wrap =
     try {
       await fn(req, res);
     } catch (err: any) {
-      res.status(500).json({ error: err?.message || String(err) });
+      const status = Number.isInteger(err?.status) ? err.status : 500;
+      res.status(status).json({ error: err?.message || String(err) });
     }
   };
+
+// リクエストの author（投稿者ラベル）。未指定や空文字ならサーバー側の既定値（user）に任せる
+function parseAuthor(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+}
 
 app.get(
   '/api/repo',
@@ -140,12 +146,25 @@ app.get(
 app.post(
   '/api/comments',
   wrap(async (req, res) => {
-    const { scope, file, side, line, body } = req.body ?? {};
+    const { scope, file, side, line, body, author } = req.body ?? {};
     if (!scope || !file || !side || typeof line !== 'number' || !body) {
       res.status(400).json({ error: 'scope, file, side, line, body は必須です' });
       return;
     }
-    res.json(comments.add({ scope, file, side, line, body }));
+    res.json(comments.add({ scope, file, side, line, body, author: parseAuthor(author) }));
+  }),
+);
+
+// スレッドへの返信。位置情報（scope / file / side / line）は親コメントから引き継ぐ
+app.post(
+  '/api/comments/:id/replies',
+  wrap(async (req, res) => {
+    const { body, author } = req.body ?? {};
+    if (!body) {
+      res.status(400).json({ error: 'body は必須です' });
+      return;
+    }
+    res.json(comments.reply(req.params.id, body, parseAuthor(author)));
   }),
 );
 
