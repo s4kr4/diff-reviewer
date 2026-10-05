@@ -48,6 +48,7 @@ pnpm start /path/to/target-repo --open
 | --- | --- | --- |
 | `[repo-path]` | カレントディレクトリ | 対象リポジトリのパス |
 | `--port <port>`（`-p`） | 8080 | API サーバーのポート |
+| `--base <ref>`（`-b`） | main / master / origin/main / origin/master のうち最初に存在するもの | ブランチ比較の初期 base。URL に `?base=` がある場合はそちらを優先 |
 | `--open` | （無効） | 起動時にブラウザで開いてアクティブにする |
 
 注意: 開発モードで `--port` を変える場合は、Vite の API プロキシ先（`client/vite.config.ts`）も合わせて変更が必要。

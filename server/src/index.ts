@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import {
+  assertSafeRef,
   commitDetail,
   compare,
   fileContent,
@@ -16,13 +17,14 @@ import {
 import { CommentStore } from './comments.js';
 import { openInBrowser } from './browser.js';
 
-const usage = 'usage: pnpm start [repo-path] [--port <port>] [--open]';
+const usage = 'usage: pnpm start [repo-path] [--port <port>] [--base <ref>] [--open]';
 
 function parseCli() {
   try {
     return parseArgs({
       options: {
         port: { type: 'string', short: 'p' },
+        base: { type: 'string', short: 'b' },
         open: { type: 'boolean' },
       },
       allowPositionals: true,
@@ -56,6 +58,19 @@ try {
   process.exit(1);
 }
 
+// ブランチ比較の初期 base（--base）。指定があれば起動時に ref として解決できることを検証する
+const defaultBase = cli.values.base ?? null;
+if (defaultBase !== null) {
+  try {
+    assertSafeRef(defaultBase);
+    await git(repo, ['rev-parse', '--verify', '--quiet', `${defaultBase}^{commit}`]);
+  } catch {
+    console.error(`error: --base の ref が見つかりません: ${defaultBase}`);
+    console.error(usage);
+    process.exit(1);
+  }
+}
+
 const comments = new CommentStore(path.join(gitDir, 'diff-reviewer-comments.json'));
 
 const app = express();
@@ -81,7 +96,7 @@ function parseAuthor(value: unknown): string | undefined {
 app.get(
   '/api/repo',
   wrap(async (_req, res) => {
-    res.json(await repoInfo(repo));
+    res.json({ ...(await repoInfo(repo)), defaultBase });
   }),
 );
 

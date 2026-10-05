@@ -31,6 +31,8 @@ const THEME_LABEL: Record<ThemePref, string> = {
 };
 
 function guessBase(repo: RepoInfo): string {
+  // 起動時に --base で指定された ref を最優先する
+  if (repo.defaultBase) return repo.defaultBase;
   for (const cand of ['main', 'master', 'origin/main', 'origin/master']) {
     if (repo.branches.includes(cand)) return cand;
   }

@@ -4,6 +4,8 @@ export interface RepoInfo {
   name: string;
   currentBranch: string;
   branches: string[];
+  // 起動時に --base で指定されたブランチ比較の初期 base。未指定なら null
+  defaultBase: string | null;
 }
 
 export interface CommitInfo {
