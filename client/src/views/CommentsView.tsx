@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../api';
 import type { CommentItem } from '../types';
 import { buildThreads, type CommentThread } from '../threads';
+import { useCommentEvents } from '../useCommentEvents';
 import { CommentThreadCard } from '../components/CommentThreadCard';
 
 interface Props {
@@ -31,6 +32,8 @@ export function CommentsView({ onJumpToScope }: Props) {
   useEffect(() => {
     reload();
   }, []);
+
+  useCommentEvents(reload);
 
   if (error) return <div className="empty-state error">{error}</div>;
   if (comments.length === 0) {

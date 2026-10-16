@@ -150,6 +150,24 @@ app.get(
   }),
 );
 
+// コメントの変更通知（Server-Sent Events）。変更のたびに data イベントを送り、
+// クライアントは受信時に一覧を再取得する（差分は送らない）
+app.get('/api/comments/events', (req, res) => {
+  res.set({
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    Connection: 'keep-alive',
+  });
+  res.flushHeaders();
+  const unsubscribe = comments.subscribe(() => res.write('data: change\n\n'));
+  // 無通信による接続切断を防ぐ keep-alive（コメント行はクライアントに届かない）
+  const ping = setInterval(() => res.write(': ping\n\n'), 30_000);
+  req.on('close', () => {
+    clearInterval(ping);
+    unsubscribe();
+  });
+});
+
 app.get(
   '/api/comments',
   wrap(async (req, res) => {

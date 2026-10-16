@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from './api';
 import type { CommentItem } from './types';
+import { useCommentEvents } from './useCommentEvents';
 
 export interface CommentActions {
   comments: CommentItem[];
@@ -21,6 +22,11 @@ export function useComments(scope: string): CommentActions {
   useEffect(() => {
     reload().catch(console.error);
   }, [reload]);
+
+  // エージェント等が API や JSON 経由で変更した分もリロード無しで反映する
+  useCommentEvents(() => {
+    reload().catch(console.error);
+  });
 
   const add = useCallback(
     async (input: Pick<CommentItem, 'file' | 'side' | 'line' | 'body'>) => {

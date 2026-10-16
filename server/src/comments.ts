@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import path from 'node:path';
 import crypto from 'node:crypto';
 
 // UI（レビュアー）からの投稿を表す author。エージェントの返信は任意のラベル（例: "Claude"）を使う
@@ -27,7 +28,50 @@ export class CommentNotFoundError extends Error {
 }
 
 export class CommentStore {
+  private listeners = new Set<() => void>();
+  private watcher: fs.FSWatcher | null = null;
+  private notifyTimer: NodeJS.Timeout | null = null;
+
   constructor(private filePath: string) {}
+
+  // コメントの変更通知を購読する。戻り値の関数で解除する。
+  // 自身の save に加えて、エージェント等が JSON を直接編集した場合も fs.watch で検知する
+  subscribe(listener: () => void): () => void {
+    this.listeners.add(listener);
+    if (!this.watcher) this.startWatching();
+    return () => {
+      this.listeners.delete(listener);
+      if (this.listeners.size === 0) this.stopWatching();
+    };
+  }
+
+  private startWatching(): void {
+    // ファイルは最初のコメントまで存在しないため、ディレクトリを監視してファイル名で絞る
+    const dir = path.dirname(this.filePath);
+    const name = path.basename(this.filePath);
+    try {
+      this.watcher = fs.watch(dir, (_event, filename) => {
+        if (filename === name) this.notify();
+      });
+    } catch {
+      // 監視できない環境では save 時の通知だけになる
+      this.watcher = null;
+    }
+  }
+
+  private stopWatching(): void {
+    this.watcher?.close();
+    this.watcher = null;
+  }
+
+  // 連続した書き込み（save と fs.watch の二重検知を含む）をまとめて 1 回の通知にする
+  private notify(): void {
+    if (this.notifyTimer) return;
+    this.notifyTimer = setTimeout(() => {
+      this.notifyTimer = null;
+      for (const listener of this.listeners) listener();
+    }, 100);
+  }
 
   private load(): CommentItem[] {
     try {
@@ -46,6 +90,7 @@ export class CommentStore {
 
   private save(comments: CommentItem[]): void {
     fs.writeFileSync(this.filePath, JSON.stringify({ comments }, null, 2) + '\n');
+    this.notify();
   }
 
   list(scope?: string): CommentItem[] {
